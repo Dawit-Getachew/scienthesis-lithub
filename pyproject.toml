@@ -1,0 +1,47 @@
+[project]
+name = "scienthesis-lithub"
+version = "0.1.0"
+description = "Scienthesis LitHub — central library service. Single source of truth for a user's saved papers across LitPulse, LitPortal, and sibling apps."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "gunicorn",
+    "sqlalchemy[asyncio]",
+    "asyncpg",
+    "alembic",
+    "redis[hiredis]",
+    "httpx",
+    "pydantic",
+    "pydantic-settings",
+    "structlog",
+    "python-dotenv",
+    "pyjwt[crypto]",
+    "email-validator",
+    "cryptography",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+    "respx",
+    "aiosqlite",
+    "pytest-cov",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "integration: integration tests requiring wired service graph",
+    "unit: unit tests with no external dependencies",
+]

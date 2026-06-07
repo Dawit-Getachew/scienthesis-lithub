@@ -14,8 +14,15 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
-SaveSource = Literal["litportal", "search", "digest", "litscholar", "litportal-collection"]
-FullTextStatus = Literal["available", "unavailable", "unknown"]
+# Accept any surface tag / status string. The backing DB columns are free
+# String(32) with no constraint; strict Literals here previously rejected
+# legitimate cross-app saves with HTTP 422 — e.g. LitPulse's LitScreen "keep"
+# sends source="screening" (not in the old list), so the service-to-service
+# mirror silently failed and kept articles never reached the central library.
+# Keeping these as plain str also prevents an output-validation 422 on the
+# read path when an already-stored entry carries a non-canonical value.
+SaveSource = str
+FullTextStatus = str
 
 
 # ── Requests ────────────────────────────────────────────────────────

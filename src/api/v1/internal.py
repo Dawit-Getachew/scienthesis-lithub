@@ -18,7 +18,7 @@ from src.core.deps import (
     get_paper_repo,
     require_service_token,
 )
-from src.core.exceptions import InvalidPaperIdentifiersError
+from src.core.exceptions import InvalidPaperIdentifiersError, LibraryEntryNotFoundError
 from src.repositories.folder_repo import FolderRepository
 from src.repositories.paper_repo import PaperRepository
 from src.schemas.internal import (
@@ -101,6 +101,28 @@ async def internal_list(
         sort_by=sort_by,
         sort_dir=sort_dir,
     )
+
+
+@router.delete("/library")
+async def internal_delete(
+    user_id: UUID = Query(...),
+    pmid: str | None = Query(default=None),
+    doi: str | None = Query(default=None),
+    service: LibraryService = Depends(get_library_service),
+) -> dict:
+    """Service-to-service delete of a paper from ``user_id``'s library by pmid|doi.
+
+    Used by the LitPortal BFF so a user can remove a paper from the unified
+    central library (the read-through "Saved from LitPulse" collection).
+    Idempotent: a paper that is already absent still returns success.
+    """
+    if not pmid and not doi:
+        raise InvalidPaperIdentifiersError("Provide pmid and/or doi.")
+    try:
+        await service.delete_by_identifier(user_id, pmid=pmid, doi=doi)
+    except LibraryEntryNotFoundError:
+        pass  # idempotent — already removed
+    return {"message": "Library entry removed."}
 
 
 @router.post("/papers/bulk", response_model=InternalPapersBulkResponse)
